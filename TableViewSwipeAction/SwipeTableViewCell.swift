@@ -9,7 +9,7 @@
 import UIKit
 
 protocol TableViewCellDelegate {
-    func hasPerformedSwipe(passedInfo: String)
+    func hasPerformedSwipe(passedInfo: String, cell: SwipeTableViewCell)
 }
 
 class SwipeTableViewCell: UITableViewCell {
@@ -20,10 +20,11 @@ class SwipeTableViewCell: UITableViewCell {
     var buttonViewOriginalCenter = CGPoint()
     var leftSwipeCount = 0
     
+    @IBOutlet weak var topViewutlet: UIView!
     @IBOutlet weak var buttonViewOutlet: UIView!
     @IBOutlet weak var containerView: UIView!
     @IBOutlet weak var trailingConstraintActionViewOutlet: NSLayoutConstraint!
-    @IBOutlet weak var leadingConstraintContainerViewOutlet: NSLayoutConstraint!
+    @IBOutlet weak var leadingConstraintTopViewOutlet: NSLayoutConstraint!
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -40,13 +41,14 @@ class SwipeTableViewCell: UITableViewCell {
     func initialize() {
         let recognizer = UIPanGestureRecognizer(target: self, action: #selector(handlePan(recognizer:)))
         recognizer.delegate = self
-        containerView.addGestureRecognizer(recognizer)
+        topViewutlet.addGestureRecognizer(recognizer)
         buttonViewOriginalCenter = buttonViewOutlet.center
         trailingConstraintActionViewOutlet.constant = -120
+        containerView.layer.cornerRadius = 10
     }
     func handlePan(recognizer: UIPanGestureRecognizer) {
         if recognizer.state == .began {
-            originalCenter = containerView.center
+            originalCenter = topViewutlet.center
         }
         
         if recognizer.state == .changed {
@@ -54,20 +56,22 @@ class SwipeTableViewCell: UITableViewCell {
         }
         
         if recognizer.state == .ended {
-            //let originalFrame = CGRect(x: 0, y: containerView.frame.origin.y, width: containerView.bounds.size.width, height: containerView.bounds.size.height)
+            let originalFrame = CGRect(x: 0, y: topViewutlet.frame.origin.y, width: topViewutlet.bounds.size.width, height: topViewutlet.bounds.size.height)
             if isSwipeSuccessful, let delegate = self.delegate {
-                leftSwipeCount += 1
-                delegate.hasPerformedSwipe(passedInfo: "I performed a swipe")
-                //moveViewBackIntoPlace(originalFrame: originalFrame)
-                self.trailingConstraintActionViewOutlet.constant = 0
-                self.leadingConstraintContainerViewOutlet.constant = -128
-                UIView.animate(withDuration: 0.3, animations: {
-                    self.layoutIfNeeded()
-                })
+                if leftSwipeCount == 0 {
+                    leftSwipeCount += 1
+                    delegate.hasPerformedSwipe(passedInfo: "I performed a swipe", cell: self)
+                    //moveViewBackIntoPlace(originalFrame: originalFrame)
+                    self.trailingConstraintActionViewOutlet.constant = 0
+                    self.leadingConstraintTopViewOutlet.constant = -128
+                    UIView.animate(withDuration: 0.3, animations: {
+                        self.layoutIfNeeded()
+                    })
+                }
             } else {
                 leftSwipeCount = 0
-                self.trailingConstraintActionViewOutlet.constant = -120
-                self.leadingConstraintContainerViewOutlet.constant = -8
+                self.trailingConstraintActionViewOutlet.constant = -122
+                moveViewBackIntoPlace(originalFrame: originalFrame)
                 UIView.animate(withDuration: 0.5, animations: {
                     self.layoutIfNeeded()
                 })
@@ -76,17 +80,17 @@ class SwipeTableViewCell: UITableViewCell {
         
     }
     func checkIfSwiped(recognizer: UIPanGestureRecognizer) {
-        let translation = recognizer.translation(in: self.containerView)
-        isSwipeSuccessful = recognizer.isLeft(theViewYouArePassing: self.containerView)
+        let translation = recognizer.translation(in: self.topViewutlet)
+        isSwipeSuccessful = recognizer.isLeft(theViewYouArePassing: self.topViewutlet)
         if isSwipeSuccessful {
             if leftSwipeCount == 0 {
-                self.containerView.center = CGPoint(x: originalCenter.x + translation.x, y: originalCenter.y)
+                self.topViewutlet.center = CGPoint(x: originalCenter.x + translation.x, y: originalCenter.y)
             }
         }
         print(isSwipeSuccessful)
     }
     func moveViewBackIntoPlace(originalFrame: CGRect) {
-        UIView.animate(withDuration: 0.2, animations: {self.containerView.frame = originalFrame})
+        UIView.animate(withDuration: 0.2, animations: {self.topViewutlet.frame = originalFrame})
     }
     override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
         if let panGestureRecognizer = gestureRecognizer as? UIPanGestureRecognizer {

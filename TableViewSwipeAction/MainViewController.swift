@@ -11,6 +11,7 @@ import UIKit
 class MainViewController: UIViewController {
 
     @IBOutlet weak var tableView: UITableView!
+    var panGesturedCell: SwipeTableViewCell?
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
@@ -33,8 +34,8 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let cell = tableView.cellForRow(at: indexPath) as! SwipeTableViewCell
         cell.leftSwipeCount = 0
-        cell.leadingConstraintContainerViewOutlet.constant = -8
-        cell.trailingConstraintActionViewOutlet.constant = -120
+        cell.leadingConstraintTopViewOutlet.constant = -8
+        cell.trailingConstraintActionViewOutlet.constant = -122
         UIView.animate(withDuration: 0.5, animations: {
             cell.layoutIfNeeded()
         })
@@ -42,7 +43,18 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource {
 }
 
 extension MainViewController: TableViewCellDelegate {
-    func hasPerformedSwipe(passedInfo: String) {
+    func hasPerformedSwipe(passedInfo: String, cell: SwipeTableViewCell) {
         print(passedInfo)
+        if panGesturedCell == nil {
+            panGesturedCell = cell
+        } else {
+            panGesturedCell?.leftSwipeCount = 0
+            panGesturedCell?.leadingConstraintTopViewOutlet.constant = -8
+            panGesturedCell?.trailingConstraintActionViewOutlet.constant = -122
+            UIView.animate(withDuration: 0.5, animations: {
+                cell.layoutIfNeeded()
+            })
+            panGesturedCell = cell
+        }
     }
 }
